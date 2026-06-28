@@ -78,12 +78,20 @@ export default function App() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const handleSession = async (sess) => {
+      if (sess && sess.user?.user_metadata?.role !== 'officer') {
+        await supabase.auth.signOut()
+        setOfficer(null)
+      } else {
+        setOfficer(sess?.user ?? null)
+      }
+    }
+
     supabase.auth.getSession().then(({ data }) => {
-      setOfficer(data.session?.user ?? null)
-      setLoading(false)
+      handleSession(data.session).then(() => setLoading(false))
     })
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      setOfficer(session?.user ?? null)
+      handleSession(session)
     })
     return () => sub.subscription.unsubscribe()
   }, [])

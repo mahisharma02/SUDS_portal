@@ -16,6 +16,13 @@ export function LoginPage({ onLogin }) {
     if (authErr) {
       setError('Invalid email or password. Please try again.')
     } else {
+      const userRole = data.user?.user_metadata?.role
+      if (userRole !== 'officer') {
+        await supabase.auth.signOut()
+        setError('Access denied: Authorized officers only.')
+        setLoading(false)
+        return
+      }
       onLogin(data.user)
     }
     setLoading(false)
