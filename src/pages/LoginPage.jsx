@@ -1,0 +1,96 @@
+import React, { useState } from 'react'
+import { supabase } from '../supabase/client'
+import { Mail, Lock, Loader2, Shield } from 'lucide-react'
+
+export function LoginPage({ onLogin }) {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const handleLogin = async (e) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    const { data, error: authErr } = await supabase.auth.signInWithPassword({ email, password })
+    if (authErr) {
+      setError('Invalid email or password. Please try again.')
+    } else {
+      onLogin(data.user)
+    }
+    setLoading(false)
+  }
+
+  return (
+    <div className="login-page">
+      <div className="login-card">
+        <div className="login-logo">
+          <div className="login-logo-icon">MCD</div>
+          <div>
+            <div className="login-logo-text">Smart Dhalao System</div>
+            <div className="login-logo-sub">Officer Recruitment Portal</div>
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 28 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>Sign In</h1>
+          <p style={{ fontSize: 14, color: 'var(--muted)' }}>Access the driver recruitment management system.</p>
+        </div>
+
+        {error && (
+          <div className="alert alert-error" style={{ marginBottom: 20 }}>
+            <Shield size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <div className="form-group">
+            <label className="form-label">Email Address</label>
+            <div style={{ position: 'relative' }}>
+              <Mail size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
+              <input
+                className="form-input"
+                style={{ paddingLeft: 40 }}
+                type="email"
+                placeholder="officer@municipal.gov.in"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                autoFocus
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Password</label>
+            <div style={{ position: 'relative' }}>
+              <Lock size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
+              <input
+                className="form-input"
+                style={{ paddingLeft: 40 }}
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%', marginTop: 4 }} disabled={loading}>
+            {loading ? <Loader2 size={18} className="spinner" /> : null}
+            {loading ? 'Signing in...' : 'Sign In'}
+          </button>
+        </form>
+
+        <div style={{ marginTop: 24, padding: '16px', background: 'var(--bg)', borderRadius: 10 }}>
+          <p style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6 }}>
+            Are you a driver applicant?{' '}
+            <a href="/apply" style={{ color: 'var(--primary)', fontWeight: 600 }}>Apply here →</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
