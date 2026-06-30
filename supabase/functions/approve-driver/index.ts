@@ -15,81 +15,89 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { applicationId, approvedBy } = await req.json()
-
-    if (!applicationId) {
-      return new Response(JSON.stringify({ error: 'applicationId is required' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+    console.log('Received request');
+    let body;
+    try {
+      body = await req.json();
+      console.log('Parsed JSON:', body);
+    } catch (e) {
+      throw new Error('Invalid request body: ' + e.message);
     }
 
-    // Admin client with service role key
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    )
+    const { applicationId, approvedBy } = body;
+    if (!applicationId) throw new Error('applicationId is required');
 
-    // Fetch application
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in Edge environment');
+    }
+
+    const supabaseAdmin = createClient(
+      supabaseUrl,
+      serviceRoleKey,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+
+    console.log('Fetched application:', applicationId);
     const { data: app, error: fetchError } = await supabaseAdmin
       .from('driver_applications')
       .select('*')
       .eq('id', applicationId)
-      .single()
+      .single();
 
     if (fetchError || !app) {
-      return new Response(JSON.stringify({ error: 'Application not found' }), {
-        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+      throw new Error(`Application not found: ${fetchError?.message || 'Unknown'}`);
     }
 
     if (app.application_status !== 'pending') {
-      return new Response(JSON.stringify({ error: 'Application already processed' }), {
-        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+      throw new Error(`Application already processed (${app.application_status})`);
     }
 
-    // Generate temporary password
-    const tempPassword = generatePassword()
-
-    // Generate driver code: MCD-YYYY-XXXX
-    const year = new Date().getFullYear()
-    const { count } = await supabaseAdmin
+    const tempPassword = generatePassword();
+    const year = new Date().getFullYear();
+    const { count, error: countError } = await supabaseAdmin
       .from('drivers')
-      .select('id', { count: 'exact', head: true })
-    const driverCode = `MCD-${year}-${String((count ?? 0) + 1).padStart(4, '0')}`
+      .select('id', { count: 'exact', head: true });
+      
+    if (countError) throw new Error(`Error counting drivers: ${countError.message}`);
+    
+    const driverCode = `MCD-${year}-${String((count ?? 0) + 1).padStart(4, '0')}`;
 
-    // Create Supabase Auth user
+    console.log('Created auth user for:', app.email);
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: app.email,
       password: tempPassword,
       email_confirm: true,
       user_metadata: { role: 'driver', full_name: app.full_name }
-    })
+    });
 
     if (authError) {
-      return new Response(JSON.stringify({ error: `Auth creation failed: ${authError.message}` }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+      throw new Error(`Auth creation failed: ${authError.message || JSON.stringify(authError)}`);
+    }
+    if (!authData || !authData.user) {
+      throw new Error(`Auth creation returned no user`);
     }
 
-    const authUserId = authData.user.id
-
-    // Call the SQL RPC to insert driver + update application
+    const authUserId = authData.user.id;
+    
+    console.log('Inserted driver via RPC. auth_user_id:', authUserId);
     const { data: rpcResult, error: rpcError } = await supabaseAdmin.rpc('approve_driver_application', {
       p_application_id: applicationId,
       p_auth_user_id: authUserId,
       p_generated_code: driverCode,
       p_approved_by: approvedBy || 'Officer'
-    })
+    });
 
     if (rpcError) {
-      // Rollback: delete the auth user we just created
-      await supabaseAdmin.auth.admin.deleteUser(authUserId)
-      return new Response(JSON.stringify({ error: `DB error: ${rpcError.message}` }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+      console.log('Rolling back Auth user due to RPC error...');
+      await supabaseAdmin.auth.admin.deleteUser(authUserId);
+      throw new Error(`Database error during approval: ${rpcError.message}`);
     }
+
+    console.log('Updated application successfully');
+    console.log('Returning success');
 
     return new Response(JSON.stringify({
       success: true,
@@ -101,12 +109,24 @@ Deno.serve(async (req) => {
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
+    });
 
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
+    console.error('Edge Function Error:', err);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: err.message,
+        stack: err.stack
+      }),
+      {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json"
+        }
+      }
+    );
   }
 })
 

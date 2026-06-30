@@ -109,6 +109,18 @@ export function ApplyPage() {
   const handleSubmit = async () => {
     setSubmitting(true)
     try {
+      // 1. Gather all session and auth data for debugging
+      const { data: sessionData, error: sessionErr } = await supabase.auth.getSession()
+      const { data: userData, error: userErr } = await supabase.auth.getUser()
+
+      console.group('🚀 [SUBMISSION DEBUGGING]')
+      console.log('--- AUTHENTICATION STATE ---')
+      console.log('getSession():', sessionData?.session ? 'Session Exists' : 'No Session', sessionErr || '')
+      console.log('getUser():', userData?.user ? `User: ${userData.user.id} (${userData.user.role})` : 'Anonymous (No User)', userErr || '')
+      console.log('auth.uid():', userData?.user?.id || 'null')
+      console.log('JWT:', sessionData?.session?.access_token || 'null')
+      console.log('JWT decoded (if possible):', sessionData?.session?.access_token ? JSON.parse(atob(sessionData.session.access_token.split('.')[1])) : 'N/A')
+
       // Upload documents
       const [photo_url, aadhaar_url, licence_url, police_verification_url, address_proof_url] = await Promise.all([
         uploadFile(files.photo, 'photos'),
@@ -117,15 +129,40 @@ export function ApplyPage() {
         uploadFile(files.police_verification, 'police'),
         uploadFile(files.address_proof, 'address'),
       ])
-      // Insert application
-      const { data, error } = await supabase.from('driver_applications').insert({
+
+      // Generate ID client-side so we don't need to return it from DB
+      const applicationId = crypto.randomUUID()
+
+      const payload = {
+        id: applicationId,
         ...form,
         years_experience: Number(form.years_experience) || 0,
         photo_url, aadhaar_url, licence_url, police_verification_url, address_proof_url
-      }).select('id').single()
-      if (error) throw error
-      setSubmitted(data.id.slice(0, 8).toUpperCase())
+      }
+      
+      console.log('--- PAYLOAD GOING TO DB ---')
+      console.log('Table: driver_applications')
+      console.log('Payload:', JSON.stringify(payload, null, 2))
+
+      // Insert application WITHOUT .select() to prevent SELECT RLS failure
+      const { error } = await supabase.from('driver_applications').insert(payload)
+      
+      if (error) {
+        console.error('--- SUPABASE ERROR OBJECT ---')
+        console.error('code:', error.code)
+        console.error('message:', error.message)
+        console.error('details:', error.details)
+        console.error('hint:', error.hint)
+        console.error('Full Error Object:', JSON.stringify(error, null, 2))
+        throw error
+      }
+      
+      console.log('✅ SUCCESS! Inserted ID:', applicationId)
+      console.groupEnd()
+      
+      setSubmitted(applicationId.slice(0, 8).toUpperCase())
     } catch (err) {
+      console.groupEnd()
       setErrors({ submit: err.message || 'Submission failed. Please try again.' })
     }
     setSubmitting(false)
@@ -165,7 +202,7 @@ export function ApplyPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.2)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900 }}>MCD</div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 15 }}>Smart Dhalao System</div>
+            <div style={{ fontWeight: 700, fontSize: 15 }}>Smart Dhalao System <span style={{fontSize: 10, background: 'var(--primary)', padding: '2px 6px', borderRadius: 4, marginLeft: 6}}>v2.1 (Fixed)</span></div>
             <div style={{ fontSize: 11, opacity: 0.8 }}>Driver Recruitment Portal</div>
           </div>
         </div>

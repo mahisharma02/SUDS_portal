@@ -180,17 +180,23 @@ export function ApplicationDetailPage({ officer }) {
     setActionLoading(true)
     setError('')
     try {
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/approve-driver`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
-        },
-        body: JSON.stringify({ applicationId: id, approvedBy: officer?.email ?? 'Officer' })
-      })
-      const result = await res.json()
-      if (!result.success) throw new Error(result.error)
-      setCredentials(result)
+      const { data, error } = await supabase.functions.invoke('approve-driver', {
+        body: { applicationId: id, approvedBy: officer?.email ?? 'Officer' }
+      });
+      
+      if (error) {
+        let msg = error.message;
+        if (error.context && typeof error.context.text === 'function') {
+          msg = await error.context.text();
+        }
+        throw new Error(msg);
+      }
+      
+      if (!data || !data.success) {
+        throw new Error(data?.error || 'Approval failed on the backend');
+      }
+      
+      setCredentials(data)
       await fetch()
     } catch (err) {
       setError(err.message || 'Approval failed. Please try again.')

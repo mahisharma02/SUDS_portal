@@ -79,12 +79,7 @@ export default function App() {
 
   useEffect(() => {
     const handleSession = async (sess) => {
-      if (sess && sess.user?.user_metadata?.role !== 'officer') {
-        await supabase.auth.signOut()
-        setOfficer(null)
-      } else {
-        setOfficer(sess?.user ?? null)
-      }
+      setOfficer(sess?.user ?? null)
     }
 
     supabase.auth.getSession().then(({ data }) => {

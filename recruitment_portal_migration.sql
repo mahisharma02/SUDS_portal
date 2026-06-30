@@ -108,7 +108,7 @@ BEGIN
     RETURN json_build_object('success', false, 'error', 'Application already processed');
   END IF;
 
-  -- Insert into existing drivers table
+  -- Insert into existing drivers table (or update if trigger already created it)
   INSERT INTO drivers (
     name, email, phone, auth_user_id, status,
     latitude, longitude
@@ -119,7 +119,16 @@ BEGIN
     p_auth_user_id,
     'available',
     0.0, 0.0
-  ) RETURNING id INTO v_driver_id;
+  )
+  ON CONFLICT (email) DO UPDATE
+  SET
+    name = EXCLUDED.name,
+    phone = EXCLUDED.phone,
+    auth_user_id = EXCLUDED.auth_user_id,
+    status = EXCLUDED.status,
+    latitude = EXCLUDED.latitude,
+    longitude = EXCLUDED.longitude
+  RETURNING id INTO v_driver_id;
 
   -- Update application
   UPDATE driver_applications
@@ -131,6 +140,29 @@ BEGIN
     approved_at         = NOW(),
     updated_at          = NOW()
   WHERE id = p_application_id;
+
+  -- Initialize driver_monthly_stats for the current month
+  INSERT INTO driver_monthly_stats (
+    driver_id,
+    month,
+    year,
+    completed_jobs,
+    accepted_jobs,
+    rejected_jobs,
+    expired_jobs,
+    acceptance_rate,
+    average_response_time_seconds
+  ) VALUES (
+    v_driver_id,
+    EXTRACT(MONTH FROM CURRENT_DATE),
+    EXTRACT(YEAR FROM CURRENT_DATE),
+    0,
+    0,
+    0,
+    0,
+    100.0,
+    0
+  );
 
   RETURN json_build_object(
     'success', true,
