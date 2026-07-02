@@ -68,7 +68,7 @@ function DocCard({ label, url }) {
 function CredentialsModal({ data, onClose }) {
   const [copied, setCopied] = useState(false)
   const copyAll = () => {
-    const text = `Driver Credentials\nDriver Code: ${data.driverCode}\nEmail: ${data.email}\nPassword: ${data.tempPassword}`
+    const text = `Service Provider Credentials\nService Provider Code: ${data.driverCode}\nEmail: ${data.email}\nPassword: ${data.tempPassword}`
     navigator.clipboard?.writeText(text)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
@@ -81,7 +81,7 @@ function CredentialsModal({ data, onClose }) {
           <div style={{ width: 64, height: 64, background: 'var(--success-light)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
             <CheckCircle2 size={32} color="var(--success)" />
           </div>
-          <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>Driver Approved!</h2>
+          <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>Service Provider Approved!</h2>
           <p style={{ fontSize: 14, color: 'var(--muted)' }}>
             A Supabase account has been created. Share these credentials with <strong>{data.fullName}</strong>.
           </p>
@@ -89,7 +89,7 @@ function CredentialsModal({ data, onClose }) {
 
         <div className="cred-box" style={{ marginBottom: 20 }}>
           <div className="cred-row">
-            <span className="cred-label">Driver Code</span>
+            <span className="cred-label">Service Provider Code</span>
             <span className="cred-value">{data.driverCode}</span>
           </div>
           <div style={{ borderBottom: '1px solid var(--border)' }} />
@@ -106,7 +106,7 @@ function CredentialsModal({ data, onClose }) {
 
         <div className="alert alert-info" style={{ marginBottom: 20, fontSize: 13 }}>
           <Shield size={15} style={{ flexShrink: 0 }} />
-          The driver can log in immediately using these credentials in the Dhalao Driver App.
+          The service provider can log in immediately using these credentials in the Dhalao Service Provider App.
         </div>
 
         <div style={{ display: 'flex', gap: 10 }}>
@@ -270,7 +270,7 @@ export function ApplicationDetailPage({ officer }) {
       {app.application_status === 'approved' && (
         <div className="alert alert-success" style={{ marginBottom: 24 }}>
           <CheckCircle2 size={16} style={{ flexShrink: 0 }} />
-          <span>Approved by <strong>{app.approved_by}</strong> on {fmt(app.approved_at)}. Driver Code: <strong>{app.generated_driver_code}</strong></span>
+          <span>Approved by <strong>{app.approved_by}</strong> on {fmt(app.approved_at)}. Service Provider Code: <strong>{app.generated_driver_code}</strong></span>
         </div>
       )}
       {app.application_status === 'rejected' && (

@@ -203,7 +203,7 @@ export function ApplyPage() {
           <div style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.2)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900 }}>MCD</div>
           <div>
             <div style={{ fontWeight: 700, fontSize: 15 }}>Smart Dhalao System <span style={{fontSize: 10, background: 'var(--primary)', padding: '2px 6px', borderRadius: 4, marginLeft: 6}}>v2.1 (Fixed)</span></div>
-            <div style={{ fontSize: 11, opacity: 0.8 }}>Driver Recruitment Portal</div>
+            <div style={{ fontSize: 11, opacity: 0.8 }}>Service Provider Recruitment Portal</div>
           </div>
         </div>
         <div style={{ fontSize: 13, opacity: 0.85 }}>Already approved? <a href="/login" style={{ color: 'white', fontWeight: 700, textDecoration: 'underline' }}>Officer Login</a></div>
@@ -211,7 +211,7 @@ export function ApplyPage() {
 
       <div className="apply-content">
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>Apply as a Driver</h1>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>Apply as a Service Provider</h1>
           <p style={{ color: 'var(--muted)', fontSize: 14 }}>Complete all steps to submit your application to MCD.</p>
         </div>
 

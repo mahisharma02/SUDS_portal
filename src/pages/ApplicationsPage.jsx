@@ -58,7 +58,7 @@ export function ApplicationsPage() {
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text)' }}>Applications</h1>
         <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 4 }}>
-          Review and manage all driver applications.
+          Review and manage all service provider applications.
         </p>
       </div>
 
@@ -100,7 +100,7 @@ export function ApplicationsPage() {
                 <th>Vehicle</th>
                 <th>Applied</th>
                 <th>Status</th>
-                <th>Driver Code</th>
+                <th>Service Provider Code</th>
                 <th></th>
               </tr>
             </thead>

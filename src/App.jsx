@@ -78,22 +78,51 @@ export default function App() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const handleSession = async (sess) => {
-      setOfficer(sess?.user ?? null)
+    let subscription = null;
+
+    const initAuth = async () => {
+      try {
+        if (!supabase) {
+          throw new Error('Supabase client is null')
+        }
+
+        const { data, error } = await supabase.auth.getSession()
+        if (error) {
+          console.error('Session error:', error)
+        }
+        setOfficer(data?.session?.user ?? null)
+        
+        const { data: subData } = supabase.auth.onAuthStateChange((_event, session) => {
+          setOfficer(session?.user ?? null)
+        })
+        subscription = subData?.subscription
+      } catch (err) {
+        console.error('Failed to initialize auth:', err)
+        setOfficer(null)
+      } finally {
+        setLoading(false)
+      }
     }
 
-    supabase.auth.getSession().then(({ data }) => {
-      handleSession(data.session).then(() => setLoading(false))
-    })
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      handleSession(session)
-    })
-    return () => sub.subscription.unsubscribe()
+    initAuth()
+
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe()
+      }
+    }
   }, [])
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    setOfficer(null)
+    try {
+      if (supabase) {
+        await supabase.auth.signOut()
+      }
+    } catch (err) {
+      console.error('Logout error:', err)
+    } finally {
+      setOfficer(null)
+    }
   }
 
   if (loading) {

@@ -43,7 +43,7 @@ export function DashboardPage() {
     <div className="page-content">
       <div style={{ marginBottom: 28 }}>
         <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text)' }}>Dashboard</h1>
-        <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 4 }}>Overview of driver recruitment activity.</p>
+        <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 4 }}>Overview of service provider recruitment activity.</p>
       </div>
 
       {/* Stats Grid */}
@@ -69,10 +69,10 @@ export function DashboardPage() {
           </div>
           <div>
             <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1 }}>{driverCount}</div>
-            <div style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>Active Drivers in the System</div>
+            <div style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>Active Service Providers in the System</div>
           </div>
         </div>
-        <div style={{ fontSize: 12, opacity: 0.75 }}>Shared with Driver App →</div>
+        <div style={{ fontSize: 12, opacity: 0.75 }}>Shared with Service Provider App →</div>
       </div>
 
       {/* Recent Applications */}

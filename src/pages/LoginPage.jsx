@@ -48,7 +48,7 @@ export function LoginPage({ onLogin }) {
 
         <div style={{ marginBottom: 28 }}>
           <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>Sign In</h1>
-          <p style={{ fontSize: 14, color: 'var(--muted)' }}>Access the driver recruitment management system.</p>
+          <p style={{ fontSize: 14, color: 'var(--muted)' }}>Access the service provider recruitment management system.</p>
         </div>
 
         {error && (
@@ -100,7 +100,7 @@ export function LoginPage({ onLogin }) {
 
         <div style={{ marginTop: 24, padding: '16px', background: 'var(--bg)', borderRadius: 10 }}>
           <p style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6 }}>
-            Are you a driver applicant?{' '}
+            Are you a service provider applicant?{' '}
             <a href="/apply" style={{ color: 'var(--primary)', fontWeight: 600 }}>Apply here →</a>
           </p>
         </div>
