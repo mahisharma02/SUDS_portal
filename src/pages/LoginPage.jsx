@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../supabase/client'
 import { Mail, Lock, Loader2, Shield } from 'lucide-react'
 
@@ -101,7 +102,7 @@ export function LoginPage({ onLogin }) {
         <div style={{ marginTop: 24, padding: '16px', background: 'var(--bg)', borderRadius: 10 }}>
           <p style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6 }}>
             Are you a service provider applicant?{' '}
-            <a href="/apply" style={{ color: 'var(--primary)', fontWeight: 600 }}>Apply here →</a>
+            <Link to="/apply" style={{ color: 'var(--primary)', fontWeight: 600 }}>Apply here →</Link>
           </p>
         </div>
       </div>

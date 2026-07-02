@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../supabase/client'
 import { Upload, Check, Loader2, User, FileText, Shield, CheckCircle2, ChevronRight, ChevronLeft } from 'lucide-react'
 
@@ -206,7 +207,7 @@ export function ApplyPage() {
             <div style={{ fontSize: 11, opacity: 0.8 }}>Service Provider Recruitment Portal</div>
           </div>
         </div>
-        <div style={{ fontSize: 13, opacity: 0.85 }}>Already approved? <a href="/login" style={{ color: 'white', fontWeight: 700, textDecoration: 'underline' }}>Officer Login</a></div>
+        <div style={{ fontSize: 13, opacity: 0.85 }}>Already approved? <Link to="/login" style={{ color: 'white', fontWeight: 700, textDecoration: 'underline' }}>Officer Login</Link></div>
       </header>
 
       <div className="apply-content">
