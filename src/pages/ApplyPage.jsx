@@ -73,6 +73,7 @@ export function ApplyPage() {
   const [form, setForm] = useState({
     full_name: '', email: '', phone: '', date_of_birth: '', address: '',
     aadhaar_number: '', licence_number: '', licence_expiry: '', vehicle_type: 'Auto/Mini Truck',
+    vehicle_type_other: '',
     years_experience: 0, emergency_contact_name: '', emergency_contact_phone: ''
   })
   const [files, setFiles] = useState({
@@ -94,6 +95,7 @@ export function ApplyPage() {
       if (!form.aadhaar_number.trim() || form.aadhaar_number.length < 12) e.aadhaar_number = '12-digit Aadhaar required'
       if (!form.licence_number.trim()) e.licence_number = 'Required'
       if (!form.licence_expiry) e.licence_expiry = 'Required'
+      if (form.vehicle_type === 'Other' && !form.vehicle_type_other.trim()) e.vehicle_type_other = 'Required'
     }
     if (step === 2) {
       if (!files.photo) e.photo = 'Passport photo required'
@@ -137,9 +139,11 @@ export function ApplyPage() {
       const payload = {
         id: applicationId,
         ...form,
+        vehicle_type: form.vehicle_type === 'Other' ? form.vehicle_type_other : form.vehicle_type,
         years_experience: Number(form.years_experience) || 0,
         photo_url, aadhaar_url, licence_url, police_verification_url, address_proof_url
       }
+      delete payload.vehicle_type_other
       
       console.log('--- PAYLOAD GOING TO DB ---')
       console.log('Table: driver_applications')
@@ -299,6 +303,13 @@ export function ApplyPage() {
                     <option>Other</option>
                   </select>
                 </div>
+                {form.vehicle_type === 'Other' && (
+                  <div className="form-group">
+                    <label className="form-label">Specify Vehicle Type <span className="form-required">*</span></label>
+                    <input className="form-input" placeholder="Enter vehicle type" value={form.vehicle_type_other} onChange={e => set('vehicle_type_other', e.target.value)} />
+                    {errors.vehicle_type_other && <span className="form-error">{errors.vehicle_type_other}</span>}
+                  </div>
+                )}
                 <div className="form-group">
                   <label className="form-label">Years of Experience</label>
                   <input className="form-input" type="number" min={0} max={40} value={form.years_experience} onChange={e => set('years_experience', e.target.value)} />
@@ -333,7 +344,7 @@ export function ApplyPage() {
                 {[
                   ['Full Name', form.full_name], ['Email', form.email], ['Phone', form.phone],
                   ['Date of Birth', form.date_of_birth], ['Aadhaar Number', form.aadhaar_number],
-                  ['Licence Number', form.licence_number], ['Vehicle Type', form.vehicle_type],
+                  ['Licence Number', form.licence_number], ['Vehicle Type', form.vehicle_type === 'Other' ? form.vehicle_type_other : form.vehicle_type],
                   ['Experience', form.years_experience + ' years'],
                 ].map(([label, value]) => (
                   <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
