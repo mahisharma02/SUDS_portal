@@ -2,12 +2,14 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../supabase/client'
 import { Mail, Lock, Loader2, Shield } from 'lucide-react'
+import { useLanguage } from '../contexts/LanguageContext'
 
 export function LoginPage({ onLogin }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const { t } = useLanguage()
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -15,7 +17,7 @@ export function LoginPage({ onLogin }) {
     setLoading(true)
     const { data, error: authErr } = await supabase.auth.signInWithPassword({ email, password })
     if (authErr) {
-      setError('Invalid email or password. Please try again.')
+      setError(t('login.error_invalid'))
     } else {
       console.log('--- OFFICER LOGIN DEBUG ---');
       console.log('VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL);
@@ -42,14 +44,14 @@ export function LoginPage({ onLogin }) {
         <div className="login-logo">
           <div className="login-logo-icon">MCD</div>
           <div>
-            <div className="login-logo-text">Smart Dhalao System</div>
-            <div className="login-logo-sub">Officer Recruitment Portal</div>
+            <div className="login-logo-text">{t('app.brand')}</div>
+            <div className="login-logo-sub">{t('login.officer_portal')}</div>
           </div>
         </div>
 
         <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>Sign In</h1>
-          <p style={{ fontSize: 14, color: 'var(--muted)' }}>Access the service provider recruitment management system.</p>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>{t('login.sign_in')}</h1>
+          <p style={{ fontSize: 14, color: 'var(--muted)' }}>{t('login.access_desc')}</p>
         </div>
 
         {error && (
@@ -61,14 +63,14 @@ export function LoginPage({ onLogin }) {
 
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <div className="form-group">
-            <label className="form-label">Email Address</label>
+            <label className="form-label">{t('login.email')}</label>
             <div style={{ position: 'relative' }}>
               <Mail size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
               <input
                 className="form-input"
                 style={{ paddingLeft: 40 }}
                 type="email"
-                placeholder="officer@municipal.gov.in"
+                placeholder={t('login.email_placeholder')}
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
@@ -78,14 +80,14 @@ export function LoginPage({ onLogin }) {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Password</label>
+            <label className="form-label">{t('login.password')}</label>
             <div style={{ position: 'relative' }}>
               <Lock size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)' }} />
               <input
                 className="form-input"
                 style={{ paddingLeft: 40 }}
                 type="password"
-                placeholder="Enter your password"
+                placeholder={t('login.password_placeholder')}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
@@ -95,14 +97,14 @@ export function LoginPage({ onLogin }) {
 
           <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%', marginTop: 4 }} disabled={loading}>
             {loading ? <Loader2 size={18} className="spinner" /> : null}
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? t('login.signing_in') : t('login.sign_in')}
           </button>
         </form>
 
         <div style={{ marginTop: 24, padding: '16px', background: 'var(--bg)', borderRadius: 10 }}>
           <p style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6 }}>
-            Are you a service provider applicant?{' '}
-            <Link to="/apply" style={{ color: 'var(--primary)', fontWeight: 600 }}>Apply here →</Link>
+            {t('login.not_officer')}{' '}
+            <Link to="/apply" style={{ color: 'var(--primary)', fontWeight: 600 }}>{t('login.apply_here')}</Link>
           </p>
         </div>
       </div>

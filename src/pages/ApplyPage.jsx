@@ -2,10 +2,10 @@ import React, { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../supabase/client'
 import { Upload, Check, Loader2, User, FileText, Shield, CheckCircle2, ChevronRight, ChevronLeft } from 'lucide-react'
+import { useLanguage } from '../contexts/LanguageContext'
 
-const STEPS = ['Personal Info', 'Licence & Vehicle', 'Documents', 'Review & Submit']
-
-function Stepper({ current }) {
+function Stepper({ current, steps }) {
+  const STEPS = steps;
   return (
     <div className="stepper">
       {STEPS.map((label, i) => {
@@ -26,7 +26,7 @@ function Stepper({ current }) {
   )
 }
 
-function UploadField({ label, required, file, onChange, accept = 'image/*,application/pdf' }) {
+function UploadField({ label, required, file, onChange, accept = 'image/*,application/pdf', t }) {
   const ref = useRef()
   const hasFile = !!file
   return (
@@ -38,13 +38,13 @@ function UploadField({ label, required, file, onChange, accept = 'image/*,applic
           <>
             <Check size={20} color="var(--success)" />
             <span className="upload-label" style={{ color: 'var(--success)' }}>{file.name}</span>
-            <span className="upload-sub">Click to replace</span>
+            <span className="upload-sub">{t('apply.docs.click_replace')}</span>
           </>
         ) : (
           <>
             <Upload size={20} color="var(--muted)" />
-            <span className="upload-label">Click to upload</span>
-            <span className="upload-sub">JPG, PNG or PDF · Max 5MB</span>
+            <span className="upload-label">{t('apply.docs.click_upload')}</span>
+            <span className="upload-sub">{t('apply.docs.limits')}</span>
           </>
         )}
       </div>
@@ -65,6 +65,8 @@ async function uploadFile(file, folder) {
 }
 
 export function ApplyPage() {
+  const { t } = useLanguage();
+  const STEPS = [t('apply.steps.0'), t('apply.steps.1'), t('apply.steps.2'), t('apply.steps.3')];
   const [step, setStep] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(null)
@@ -86,21 +88,21 @@ export function ApplyPage() {
   const validate = () => {
     const e = {}
     if (step === 0) {
-      if (!form.full_name.trim()) e.full_name = 'Required'
-      if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) e.email = 'Valid email required'
-      if (!form.phone.trim() || form.phone.length < 10) e.phone = 'Valid phone required'
-      if (!form.address.trim()) e.address = 'Required'
+      if (!form.full_name.trim()) e.full_name = t('apply.errors.required')
+      if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) e.email = t('apply.errors.email')
+      if (!form.phone.trim() || form.phone.length < 10) e.phone = t('apply.errors.phone')
+      if (!form.address.trim()) e.address = t('apply.errors.required')
     }
     if (step === 1) {
-      if (!form.aadhaar_number.trim() || form.aadhaar_number.length < 12) e.aadhaar_number = '12-digit Aadhaar required'
-      if (!form.licence_number.trim()) e.licence_number = 'Required'
-      if (!form.licence_expiry) e.licence_expiry = 'Required'
-      if (form.vehicle_type === 'Other' && !form.vehicle_type_other.trim()) e.vehicle_type_other = 'Required'
+      if (!form.aadhaar_number.trim() || form.aadhaar_number.length < 12) e.aadhaar_number = t('apply.errors.aadhaar')
+      if (!form.licence_number.trim()) e.licence_number = t('apply.errors.required')
+      if (!form.licence_expiry) e.licence_expiry = t('apply.errors.required')
+      if (form.vehicle_type === 'Other' && !form.vehicle_type_other.trim()) e.vehicle_type_other = t('apply.errors.required')
     }
     if (step === 2) {
-      if (!files.photo) e.photo = 'Passport photo required'
-      if (!files.aadhaar) e.aadhaar = 'Aadhaar document required'
-      if (!files.licence) e.licence = 'Driving licence required'
+      if (!files.photo) e.photo = t('apply.errors.photo')
+      if (!files.aadhaar) e.aadhaar = t('apply.errors.doc_aadhaar')
+      if (!files.licence) e.licence = t('apply.errors.doc_licence')
     }
     setErrors(e)
     return Object.keys(e).length === 0
@@ -168,7 +170,7 @@ export function ApplyPage() {
       setSubmitted(applicationId.slice(0, 8).toUpperCase())
     } catch (err) {
       console.groupEnd()
-      setErrors({ submit: err.message || 'Submission failed. Please try again.' })
+      setErrors({ submit: err.message || t('apply.errors.submit') })
     }
     setSubmitting(false)
   }
@@ -179,7 +181,7 @@ export function ApplyPage() {
         <header className="apply-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.2)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900 }}>MCD</div>
-            <span style={{ fontWeight: 700, fontSize: 16 }}>Smart Dhalao System</span>
+            <span style={{ fontWeight: 700, fontSize: 16 }}>{t('app.brand')}</span>
           </div>
         </header>
         <div className="apply-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 70px)' }}>
@@ -187,12 +189,12 @@ export function ApplyPage() {
             <div style={{ width: 80, height: 80, background: 'var(--success-light)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
               <CheckCircle2 size={44} color="var(--success)" />
             </div>
-            <h1 style={{ fontSize: 26, fontWeight: 800, color: 'var(--text)', marginBottom: 12 }}>Application Submitted!</h1>
+            <h1 style={{ fontSize: 26, fontWeight: 800, color: 'var(--text)', marginBottom: 12 }}>{t('apply.success.title')}</h1>
             <p style={{ fontSize: 15, color: 'var(--muted)', lineHeight: 1.7, maxWidth: 420, margin: '0 auto 24px' }}>
-              Your application has been received. An officer will review your documents and contact you via email.
+              {t('apply.success.desc')}
             </p>
             <div className="cred-box" style={{ maxWidth: 280, margin: '0 auto' }}>
-              <p style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, marginBottom: 4 }}>Your Reference Number</p>
+              <p style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, marginBottom: 4 }}>{t('apply.success.ref')}</p>
               <p style={{ fontSize: 22, fontWeight: 900, color: 'var(--primary)', fontFamily: 'monospace' }}>#{submitted}</p>
             </div>
           </div>
@@ -207,20 +209,20 @@ export function ApplyPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.2)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900 }}>MCD</div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 15 }}>Smart Dhalao System <span style={{fontSize: 10, background: 'var(--primary)', padding: '2px 6px', borderRadius: 4, marginLeft: 6}}>v2.1 (Fixed)</span></div>
-            <div style={{ fontSize: 11, opacity: 0.8 }}>Service Provider Recruitment Portal</div>
+            <div style={{ fontWeight: 700, fontSize: 15 }}>{t('app.brand')} <span style={{fontSize: 10, background: 'var(--primary)', padding: '2px 6px', borderRadius: 4, marginLeft: 6}}>v2.1 (Fixed)</span></div>
+            <div style={{ fontSize: 11, opacity: 0.8 }}>{t('apply.provider_portal')}</div>
           </div>
         </div>
-        <div style={{ fontSize: 13, opacity: 0.85 }}>Already approved? <Link to="/login" style={{ color: 'white', fontWeight: 700, textDecoration: 'underline' }}>Officer Login</Link></div>
+        <div style={{ fontSize: 13, opacity: 0.85 }}>{t('apply.already_approved')} <Link to="/login" style={{ color: 'white', fontWeight: 700, textDecoration: 'underline' }}>{t('apply.officer_login')}</Link></div>
       </header>
 
       <div className="apply-content">
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>Apply as a Service Provider</h1>
-          <p style={{ color: 'var(--muted)', fontSize: 14 }}>Complete all steps to submit your application to MCD.</p>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>{t('apply.title')}</h1>
+          <p style={{ color: 'var(--muted)', fontSize: 14 }}>{t('apply.subtitle')}</p>
         </div>
 
-        <Stepper current={step} />
+        <Stepper current={step} steps={STEPS} />
 
         <div className="apply-card">
           {errors.submit && (
@@ -233,40 +235,40 @@ export function ApplyPage() {
           {/* Step 0: Personal */}
           {step === 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              <h2 style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>Personal Information</h2>
+              <h2 style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{t('apply.personal.title')}</h2>
               <div className="form-grid">
                 <div className="form-group">
-                  <label className="form-label">Full Name <span className="form-required">*</span></label>
-                  <input className="form-input" placeholder="Rajesh Kumar" value={form.full_name} onChange={e => set('full_name', e.target.value)} />
+                  <label className="form-label">{t('apply.personal.full_name')} <span className="form-required">*</span></label>
+                  <input className="form-input" placeholder={t('apply.personal.full_name_placeholder')} value={form.full_name} onChange={e => set('full_name', e.target.value)} />
                   {errors.full_name && <span className="form-error">{errors.full_name}</span>}
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Email Address <span className="form-required">*</span></label>
-                  <input className="form-input" type="email" placeholder="rajesh@example.com" value={form.email} onChange={e => set('email', e.target.value)} />
+                  <label className="form-label">{t('apply.personal.email')} <span className="form-required">*</span></label>
+                  <input className="form-input" type="email" placeholder={t('apply.personal.email_placeholder')} value={form.email} onChange={e => set('email', e.target.value)} />
                   {errors.email && <span className="form-error">{errors.email}</span>}
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Phone Number <span className="form-required">*</span></label>
-                  <input className="form-input" type="tel" placeholder="9876543210" value={form.phone} onChange={e => set('phone', e.target.value)} />
+                  <label className="form-label">{t('apply.personal.phone')} <span className="form-required">*</span></label>
+                  <input className="form-input" type="tel" placeholder={t('apply.personal.phone_placeholder')} value={form.phone} onChange={e => set('phone', e.target.value)} />
                   {errors.phone && <span className="form-error">{errors.phone}</span>}
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Date of Birth</label>
+                  <label className="form-label">{t('apply.personal.dob')}</label>
                   <input className="form-input" type="date" value={form.date_of_birth} onChange={e => set('date_of_birth', e.target.value)} />
                 </div>
               </div>
               <div className="form-group">
-                <label className="form-label">Full Address <span className="form-required">*</span></label>
-                <textarea className="form-textarea" rows={3} placeholder="House No, Street, Area, City, PIN" value={form.address} onChange={e => set('address', e.target.value)} />
+                <label className="form-label">{t('apply.personal.address')} <span className="form-required">*</span></label>
+                <textarea className="form-textarea" rows={3} placeholder={t('apply.personal.address_placeholder')} value={form.address} onChange={e => set('address', e.target.value)} />
                 {errors.address && <span className="form-error">{errors.address}</span>}
               </div>
               <div className="form-grid">
                 <div className="form-group">
-                  <label className="form-label">Emergency Contact Name</label>
+                  <label className="form-label">{t('apply.personal.emergency_name')}</label>
                   <input className="form-input" placeholder="Name" value={form.emergency_contact_name} onChange={e => set('emergency_contact_name', e.target.value)} />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Emergency Contact Phone</label>
+                  <label className="form-label">{t('apply.personal.emergency_phone')}</label>
                   <input className="form-input" placeholder="Phone" value={form.emergency_contact_phone} onChange={e => set('emergency_contact_phone', e.target.value)} />
                 </div>
               </div>
@@ -276,42 +278,42 @@ export function ApplyPage() {
           {/* Step 1: Licence */}
           {step === 1 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              <h2 style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>Licence & Vehicle Details</h2>
+              <h2 style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{t('apply.vehicle.title')}</h2>
               <div className="form-grid">
                 <div className="form-group">
-                  <label className="form-label">Aadhaar Number <span className="form-required">*</span></label>
-                  <input className="form-input" placeholder="1234 5678 9012" maxLength={14} value={form.aadhaar_number} onChange={e => set('aadhaar_number', e.target.value.replace(/\D/g, '').slice(0, 12))} />
+                  <label className="form-label">{t('apply.vehicle.aadhaar')} <span className="form-required">*</span></label>
+                  <input className="form-input" placeholder={t('apply.vehicle.aadhaar_placeholder')} maxLength={14} value={form.aadhaar_number} onChange={e => set('aadhaar_number', e.target.value.replace(/\D/g, '').slice(0, 12))} />
                   {errors.aadhaar_number && <span className="form-error">{errors.aadhaar_number}</span>}
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Driving Licence Number <span className="form-required">*</span></label>
-                  <input className="form-input" placeholder="DL-XXXXXXXXXX" value={form.licence_number} onChange={e => set('licence_number', e.target.value)} />
+                  <label className="form-label">{t('apply.vehicle.licence')} <span className="form-required">*</span></label>
+                  <input className="form-input" placeholder={t('apply.vehicle.licence_placeholder')} value={form.licence_number} onChange={e => set('licence_number', e.target.value)} />
                   {errors.licence_number && <span className="form-error">{errors.licence_number}</span>}
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Licence Expiry <span className="form-required">*</span></label>
+                  <label className="form-label">{t('apply.vehicle.expiry')} <span className="form-required">*</span></label>
                   <input className="form-input" type="date" value={form.licence_expiry} onChange={e => set('licence_expiry', e.target.value)} />
                   {errors.licence_expiry && <span className="form-error">{errors.licence_expiry}</span>}
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Vehicle Type</label>
+                  <label className="form-label">{t('apply.vehicle.type')}</label>
                   <select className="form-select" value={form.vehicle_type} onChange={e => set('vehicle_type', e.target.value)}>
-                    <option>Auto/Mini Truck</option>
-                    <option>Tractor</option>
-                    <option>Garbage Compactor</option>
-                    <option>Electric Vehicle</option>
-                    <option>Other</option>
+                    <option value="Auto/Mini Truck">{t('apply.vehicle.types.auto')}</option>
+                    <option value="Tractor">{t('apply.vehicle.types.tractor')}</option>
+                    <option value="Garbage Compactor">{t('apply.vehicle.types.compactor')}</option>
+                    <option value="Electric Vehicle">{t('apply.vehicle.types.ev')}</option>
+                    <option value="Other">{t('apply.vehicle.types.other')}</option>
                   </select>
                 </div>
                 {form.vehicle_type === 'Other' && (
                   <div className="form-group">
-                    <label className="form-label">Specify Vehicle Type <span className="form-required">*</span></label>
-                    <input className="form-input" placeholder="Enter vehicle type" value={form.vehicle_type_other} onChange={e => set('vehicle_type_other', e.target.value)} />
+                    <label className="form-label">{t('apply.vehicle.specify_type')} <span className="form-required">*</span></label>
+                    <input className="form-input" placeholder={t('apply.vehicle.specify_placeholder')} value={form.vehicle_type_other} onChange={e => set('vehicle_type_other', e.target.value)} />
                     {errors.vehicle_type_other && <span className="form-error">{errors.vehicle_type_other}</span>}
                   </div>
                 )}
                 <div className="form-group">
-                  <label className="form-label">Years of Experience</label>
+                  <label className="form-label">{t('apply.vehicle.experience')}</label>
                   <input className="form-input" type="number" min={0} max={40} value={form.years_experience} onChange={e => set('years_experience', e.target.value)} />
                 </div>
               </div>
@@ -321,14 +323,14 @@ export function ApplyPage() {
           {/* Step 2: Documents */}
           {step === 2 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              <h2 style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>Upload Documents</h2>
-              <p style={{ fontSize: 13, color: 'var(--muted)' }}>Upload clear, legible copies of all required documents.</p>
+              <h2 style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>{t('apply.docs.title')}</h2>
+              <p style={{ fontSize: 13, color: 'var(--muted)' }}>{t('apply.docs.desc')}</p>
               <div className="form-grid">
-                <UploadField label="Passport Size Photo" required file={files.photo} onChange={v => setFile('photo', v)} accept="image/*" />
-                <UploadField label="Aadhaar Card" required file={files.aadhaar} onChange={v => setFile('aadhaar', v)} />
-                <UploadField label="Driving Licence" required file={files.licence} onChange={v => setFile('licence', v)} />
-                <UploadField label="Police Verification" file={files.police_verification} onChange={v => setFile('police_verification', v)} />
-                <UploadField label="Address Proof" file={files.address_proof} onChange={v => setFile('address_proof', v)} />
+                <UploadField t={t} label={t('apply.docs.photo')} required file={files.photo} onChange={v => setFile('photo', v)} accept="image/*" />
+                <UploadField t={t} label={t('apply.docs.aadhaar')} required file={files.aadhaar} onChange={v => setFile('aadhaar', v)} />
+                <UploadField t={t} label={t('apply.docs.licence')} required file={files.licence} onChange={v => setFile('licence', v)} />
+                <UploadField t={t} label={t('apply.docs.police')} file={files.police_verification} onChange={v => setFile('police_verification', v)} />
+                <UploadField t={t} label={t('apply.docs.address')} file={files.address_proof} onChange={v => setFile('address_proof', v)} />
               </div>
               {errors.photo && <span className="form-error">{errors.photo}</span>}
               {errors.aadhaar && <span className="form-error">{errors.aadhaar}</span>}
@@ -339,13 +341,13 @@ export function ApplyPage() {
           {/* Step 3: Review */}
           {step === 3 && (
             <div>
-              <h2 style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)', marginBottom: 20 }}>Review & Submit</h2>
+              <h2 style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)', marginBottom: 20 }}>{t('apply.review.title')}</h2>
               <div style={{ display: 'grid', gap: 12 }}>
                 {[
-                  ['Full Name', form.full_name], ['Email', form.email], ['Phone', form.phone],
-                  ['Date of Birth', form.date_of_birth], ['Aadhaar Number', form.aadhaar_number],
-                  ['Licence Number', form.licence_number], ['Vehicle Type', form.vehicle_type === 'Other' ? form.vehicle_type_other : form.vehicle_type],
-                  ['Experience', form.years_experience + ' years'],
+                  [t('apply.personal.full_name'), form.full_name], [t('apply.personal.email'), form.email], [t('apply.personal.phone'), form.phone],
+                  [t('apply.personal.dob'), form.date_of_birth], [t('apply.vehicle.aadhaar'), form.aadhaar_number],
+                  [t('apply.vehicle.licence'), form.licence_number], [t('apply.vehicle.type'), form.vehicle_type === 'Other' ? form.vehicle_type_other : form.vehicle_type],
+                  [t('apply.vehicle.experience'), form.years_experience + ' '],
                 ].map(([label, value]) => (
                   <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
                     <span style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 600 }}>{label}</span>
@@ -353,15 +355,15 @@ export function ApplyPage() {
                   </div>
                 ))}
                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
-                  <span style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 600 }}>Documents</span>
+                  <span style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 600 }}>{t('apply.review.documents')}</span>
                   <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--success)' }}>
-                    {Object.values(files).filter(Boolean).length} / 5 uploaded
+                    {Object.values(files).filter(Boolean).length} / 5 {t('apply.review.uploaded')}
                   </span>
                 </div>
               </div>
               <div className="alert alert-info" style={{ marginTop: 20 }}>
                 <Shield size={15} style={{ flexShrink: 0 }} />
-                By submitting, you confirm that all information provided is accurate and truthful.
+                {t('apply.review.confirm')}
               </div>
             </div>
           )}
@@ -370,17 +372,17 @@ export function ApplyPage() {
           <div style={{ display: 'flex', gap: 12, marginTop: 32 }}>
             {step > 0 && (
               <button className="btn btn-outline" style={{ flex: 1, height: 48 }} onClick={prev}>
-                <ChevronLeft size={18} /> Previous
+                <ChevronLeft size={18} /> {t('apply.nav.prev')}
               </button>
             )}
             {step < STEPS.length - 1 ? (
               <button className="btn btn-primary" style={{ flex: 2, height: 48 }} onClick={next}>
-                Next <ChevronRight size={18} />
+                {t('apply.nav.next')} <ChevronRight size={18} />
               </button>
             ) : (
               <button className="btn btn-success" style={{ flex: 2, height: 48 }} onClick={handleSubmit} disabled={submitting}>
                 {submitting ? <Loader2 size={18} className="spinner" /> : <CheckCircle2 size={18} />}
-                {submitting ? 'Submitting...' : 'Submit Application'}
+                {submitting ? t('apply.nav.submitting') : t('apply.nav.submit')}
               </button>
             )}
           </div>

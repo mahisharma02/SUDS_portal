@@ -1,7 +1,8 @@
 import React, { useState, useEffect, createContext, useContext } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, NavLink, useNavigate } from 'react-router-dom'
 import { supabase } from './supabase/client'
-import { LayoutDashboard, Users, LogOut, FileText, Menu, X } from 'lucide-react'
+import { LayoutDashboard, Users, LogOut, FileText, Menu, X, Globe } from 'lucide-react'
+import { LanguageProvider, useLanguage } from './contexts/LanguageContext'
 import './index.css'
 
 // Pages
@@ -12,6 +13,20 @@ import { ApplicationsPage } from './pages/ApplicationsPage'
 import { ApplicationDetailPage } from './pages/ApplicationDetailPage'
 
 export const AppContext = createContext(null)
+
+function LanguageToggle({ className = '' }) {
+  const { lang, toggleLang } = useLanguage();
+  return (
+    <button 
+      onClick={toggleLang}
+      className={`btn btn-outline ${className}`}
+      style={{ padding: '6px 12px', height: 'auto', gap: 6, fontSize: 13, background: 'var(--bg)' }}
+    >
+      <Globe size={14} />
+      {lang === 'hi' ? 'EN' : 'HI'}
+    </button>
+  );
+}
 
 function Sidebar({ officer, onLogout }) {
   const nav = useNavigate()
@@ -137,14 +152,19 @@ export default function App() {
   }
 
   return (
-    <AppContext.Provider value={{ officer }}>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/apply" element={<ApplyPage />} />
-          <Route path="/login" element={!officer ? <LoginPage onLogin={setOfficer} /> : <Navigate to="/dashboard" replace />} />
-          <Route path="/*" element={officer ? <OfficerLayout officer={officer} onLogout={handleLogout} /> : <Navigate to="/login" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AppContext.Provider>
+    <LanguageProvider>
+      <AppContext.Provider value={{ officer }}>
+        <BrowserRouter>
+          <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 1000 }}>
+            <LanguageToggle />
+          </div>
+          <Routes>
+            <Route path="/apply" element={<ApplyPage />} />
+            <Route path="/login" element={!officer ? <LoginPage onLogin={setOfficer} /> : <Navigate to="/dashboard" replace />} />
+            <Route path="/*" element={officer ? <OfficerLayout officer={officer} onLogout={handleLogout} /> : <Navigate to="/login" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AppContext.Provider>
+    </LanguageProvider>
   )
 }
