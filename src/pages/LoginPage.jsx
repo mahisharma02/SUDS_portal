@@ -19,20 +19,6 @@ export function LoginPage({ onLogin }) {
     if (authErr) {
       setError(t('login.error_invalid'))
     } else {
-      console.log('--- OFFICER LOGIN DEBUG ---');
-      console.log('VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL);
-      console.log('VITE_SUPABASE_ANON_KEY:', import.meta.env.VITE_SUPABASE_ANON_KEY?.substring(0, 10) + '...');
-      console.log('loginResult:', { data, authErr });
-      
-      const { data: sessionData } = await supabase.auth.getSession();
-      console.log('session:', sessionData.session);
-      
-      const { data: userData } = await supabase.auth.getUser();
-      console.log('user:', userData.user);
-      console.log('auth uid:', userData.user?.id);
-      console.log('JWT metadata (user_metadata):', userData.user?.user_metadata);
-      console.log('JWT metadata (app_metadata):', userData.user?.app_metadata);
-      
       onLogin(data.user)
     }
     setLoading(false)

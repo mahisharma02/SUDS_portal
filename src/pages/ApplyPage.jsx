@@ -114,18 +114,6 @@ export function ApplyPage() {
   const handleSubmit = async () => {
     setSubmitting(true)
     try {
-      // 1. Gather all session and auth data for debugging
-      const { data: sessionData, error: sessionErr } = await supabase.auth.getSession()
-      const { data: userData, error: userErr } = await supabase.auth.getUser()
-
-      console.group('🚀 [SUBMISSION DEBUGGING]')
-      console.log('--- AUTHENTICATION STATE ---')
-      console.log('getSession():', sessionData?.session ? 'Session Exists' : 'No Session', sessionErr || '')
-      console.log('getUser():', userData?.user ? `User: ${userData.user.id} (${userData.user.role})` : 'Anonymous (No User)', userErr || '')
-      console.log('auth.uid():', userData?.user?.id || 'null')
-      console.log('JWT:', sessionData?.session?.access_token || 'null')
-      console.log('JWT decoded (if possible):', sessionData?.session?.access_token ? JSON.parse(atob(sessionData.session.access_token.split('.')[1])) : 'N/A')
-
       // Upload documents
       const [photo_url, aadhaar_url, licence_url, police_verification_url, address_proof_url] = await Promise.all([
         uploadFile(files.photo, 'photos'),
@@ -147,29 +135,16 @@ export function ApplyPage() {
       }
       delete payload.vehicle_type_other
       
-      console.log('--- PAYLOAD GOING TO DB ---')
-      console.log('Table: driver_applications')
-      console.log('Payload:', JSON.stringify(payload, null, 2))
-
       // Insert application WITHOUT .select() to prevent SELECT RLS failure
       const { error } = await supabase.from('driver_applications').insert(payload)
       
       if (error) {
-        console.error('--- SUPABASE ERROR OBJECT ---')
-        console.error('code:', error.code)
-        console.error('message:', error.message)
-        console.error('details:', error.details)
-        console.error('hint:', error.hint)
-        console.error('Full Error Object:', JSON.stringify(error, null, 2))
+        console.error('Supabase Error:', error)
         throw error
       }
       
-      console.log('✅ SUCCESS! Inserted ID:', applicationId)
-      console.groupEnd()
-      
       setSubmitted(applicationId.slice(0, 8).toUpperCase())
     } catch (err) {
-      console.groupEnd()
       setErrors({ submit: err.message || t('apply.errors.submit') })
     }
     setSubmitting(false)
@@ -209,7 +184,7 @@ export function ApplyPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.2)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900 }}>MCD</div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 15 }}>{t('app.brand')} <span style={{fontSize: 10, background: 'var(--primary)', padding: '2px 6px', borderRadius: 4, marginLeft: 6}}>v2.1 (Fixed)</span></div>
+            <div style={{ fontWeight: 700, fontSize: 15 }}>{t('app.brand')}</div>
             <div style={{ fontSize: 11, opacity: 0.8 }}>{t('apply.provider_portal')}</div>
           </div>
         </div>
